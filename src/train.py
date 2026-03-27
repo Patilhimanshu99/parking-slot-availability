@@ -17,9 +17,13 @@ MODEL_PATH = "outputs/model/parking_rf_model.pkl"
 
 
 def extract_hog_features(img):
+    # Resize image
     img = cv2.resize(img, (128, 128))
+
+    # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+    # Extract HOG features
     features = hog(
         gray,
         orientations=9,
@@ -34,7 +38,7 @@ def load_data():
     X = []
     y = []
 
-    # Empty = 0
+    # Empty slots check
     for file in os.listdir(EMPTY_DIR):
         path = os.path.join(EMPTY_DIR, file)
         img = cv2.imread(path)
@@ -43,7 +47,7 @@ def load_data():
         X.append(extract_hog_features(img))
         y.append(0)
 
-    # Occupied = 1
+    # Occupancy check 
     for file in os.listdir(OCCUPIED_DIR):
         path = os.path.join(OCCUPIED_DIR, file)
         img = cv2.imread(path)
@@ -71,7 +75,8 @@ def main():
     print("\nTraining Random Forest...")
     model = RandomForestClassifier(
         n_estimators=200,
-        random_state=42
+        random_state=42,
+        n_jobs=-1   # Uses all CPU cores
     )
     model.fit(X_train, y_train)
 
@@ -81,9 +86,16 @@ def main():
     acc = accuracy_score(y_test, y_pred)
     print("\nAccuracy:", round(acc * 100, 2), "%")
 
+    #Interpretation
+    if acc > 0.85:
+        print("Model performance is good.")
+    else:
+        print("Model needs improvement.")
+
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
     print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
+    #Save model
     os.makedirs("outputs/model", exist_ok=True)
     joblib.dump(model, MODEL_PATH)
 

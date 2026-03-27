@@ -1,0 +1,6 @@
+dataset/
+outputs/
+*.pkl
+*.jpg
+__pycache__/
+*.pyc
